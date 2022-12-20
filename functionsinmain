@@ -1,0 +1,406 @@
+import PySimpleGUI as sg
+import pandas as pd
+import mysql.connector as mc
+def welcome():
+    sg.theme("Tan")
+    col1=   [[sg.Image("10.png")],
+             [sg.Button('Ok')]]
+    layout=[[sg.Column(col1)]]
+    window=sg.Window("WELCOME",layout).finalize()
+    event=window.read()
+    window.close()
+    return(event)
+def frspng():
+    sg.theme("Tan")
+    col1 = [[sg.Button(enable_events=True,image_filename="7.png",key='b1'),sg.Button(enable_events=True,image_filename="8.png",key='b2')]]
+    layout = [[sg.Column(col1)]]
+    window = sg.Window('Welcome',layout).finalize()
+    events,values = window.read()
+    window.close()
+    return (events ,values)
+
+def login():
+    sg.theme("Tan")
+    col1=[[sg.Text("LOGIN",font=("Arial 14"),background_color="white",text_color="black")],
+             [sg.Input("User Id")],
+             [sg.Input("Password ",password_char='*')],
+             [sg.Combo(["Admin","Accoutant"], size=(20, 20), default_value='-Select-')],
+             [sg.Button("Log In"),sg.Button("Sign Up"),sg.Button("Forgot Password")]]
+    
+    col2=  [[sg.Image("2.png")]]
+ 
+    layout=[[sg.Column(col1),
+             sg.Column(col2)]]
+    window=sg.Window("Admin Login",layout).finalize()
+    event,values=window.read()
+
+    print(event, values[0],values[1]) 
+    window.close()
+    return(event,values)
+def signup():
+    sg.theme("Tan")
+    col1=   [[sg.Text("SIGN UP",font=("Arial 14"),background_color="white",text_color="black")],
+             [sg.Input("user ID")],
+             [sg.Input("User Name")],
+             [sg.Input("Password")],
+             [sg.Input("Identification No.(Max 3 numbers)")],
+             [sg.Button("Sign Up"),sg.Button('Cancel')]]
+   
+    layout=[[sg.Column(col1)]]
+    window=sg.Window("Sign Up",layout).finalize()
+    event,values=window.read()
+    print(event, values[0]) 
+    window.close()
+    return(event,values)
+def fgtpwd():
+    sg.theme("Tan")
+    col1= [[sg.Text("User Name",font=("Arial 14"),background_color="white",text_color="black")],
+           [sg.Input("User Name")],
+           [sg.Input("Identification Number")],
+           [sg.Button("Next")]]
+   
+    layout=[[sg.Column(col1)]]
+    window=sg.Window("Forgot Password",layout).finalize()
+    event,values=window.read()
+    print(event, values[0]) 
+    window.close()
+    return(event,values)
+def dashboard():
+     sg.theme("Tan")
+     col1=[[sg.Input(" WELCOME ADMIN")],
+          [sg.Button("IN PATIENT REGISTRY"),sg.Button("DOCTOR"),sg.Button("APPOINTMENT"),sg.Button("STAFF"),sg.Button("SEARCH"),sg.Button("BACK"),sg.Button("Exit")]]
+     col2=[[sg.Image("1.png")]]
+
+
+     layout=[[sg.Column(col1),
+              sg.Column(col2)]]
+     window=sg.Window("WELCOME",layout).finalize()
+     event,values=window.read()
+     print(event) 
+     window.close()
+     return(event,values[0])
+def patient():
+     sg.theme("Tan")
+     col1=[[sg.Text("Patient Id")],
+           [sg.Input("")],
+         [sg.Text("Patient Name")],
+           [sg.Input("")],
+           [sg.Text("Date Of Adddmision")],
+           [sg.Input("",disabled=True),sg.CalendarButton("Select date",format=('%y-%m-%d'))],
+           [sg.Text("Age")],
+           [sg.Input("")],
+           [sg.Text("Address")],
+           [sg.Combo(["Agra","Ahemedabad","Bangalore","Chennai","Delhi","Hyderabad","Kochi","Mumbai","Pune","Trivandrum","Visakhapatnam"], size=(20, 20), default_value='-Select-')],
+           [sg.Text("Phone No")],
+           [sg.Input("")],           
+           [sg.Text("Payment")],
+           [sg.Input("")],
+          [sg.Button("Register"),sg.Button("Update"),sg.Button("Delete"),sg.Button("Back")]]
+     layout=[[sg.Column(col1)]]
+     window=sg.Window("Patient Details",layout).finalize()
+     event,values=window.read()
+     print(event,values[0]) 
+     window.close()
+     return(event,values)
+def delete():
+    sg.theme("Tan")
+    col1=[[sg.Input("Patient Id")],
+          [sg.Input("Name")],
+          [sg.Button("Delete"),sg.Button("Back")]]
+    layout=[[sg.Column(col1)]]
+    window=sg.Window("Delete Details",layout).finalize()
+    event,values=window.read()
+    print(event,values[0]) 
+    window.close()
+    return(event,values)
+def doctor():
+    sg.theme("Tan")
+    col1=[[sg.Text("Doctor DETAILS",font=("Arial 14"),background_color="white",text_color="black")],
+          [sg.Input("Doctor Id")],
+          [sg.Input("Department")],
+             [sg.Button("FINISH"),sg.Button("Back")]] 
+    col2=[[sg.Image("2.png")]] 
+ 
+    layout=[[sg.Column(col1),
+             sg.Column(col2)]]
+    window=sg.Window("DOCTOR",layout).finalize()
+    event,values=window.read()
+    print(event, values[0],values[1]) 
+    window.close()
+    return(event,values)
+def app1():
+      sg.theme("Tan")
+      col1=[[sg.Text("APPOINTMENT DETAILS")],
+           [sg.Input("Patient Id")],
+           [sg.Input("Patient Name")],
+            [sg.Input("DATE",disabled=True),sg.CalendarButton("Select date",format=('%y-%m-%d'))],
+            [sg.Input("TIME")],
+          [sg.Button("ENTER"),sg.Button("UPDATE"),sg.Button("Back")]]
+      layout=[[sg.Column(col1)]]
+      window=sg.Window("Appointments DETAILS",layout).finalize()
+      event,values=window.read()
+      print(event,values[0]) 
+      window.close()
+      return(event,values)
+def nstaff():
+     sg.theme("Tan")
+     col1=[[sg.Text("Staff Id")],
+           [sg.Input("")],
+           [sg.Text(" Name")],
+           [sg.Input("")],
+           [sg.Text("Address")],
+           [sg.Input("")],
+           [sg.Text("DOB")],
+           [sg.Input("",disabled=True),sg.CalendarButton("Select date",format=('%y-%m-%d'))],
+           [sg.Text("Email_Id")],
+           [sg.Input("")],
+           [sg.Text("Phone No")],
+           [sg.Input("")],           
+           [sg.Text("DOJ")],
+           [sg.Input("",disabled=True),sg.CalendarButton("Select date",format=('%y-%m-%d'))],
+           [sg.Text("Salary")],
+           [sg.Input("")],
+           [sg.Text("Department")],
+           [sg.Input("")],
+          [sg.Button("Register"),sg.Button("Update"),sg.Button("Back")]]
+     layout=[[sg.Column(col1)]]
+     window=sg.Window("Staff Details",layout).finalize()
+     event,values=window.read()
+     print(event,values[0]) 
+     window.close()
+     return(event,values)
+def appointments():
+     sg.theme("Tan")
+     col1=[[sg.Text("PATIENT DETAILS")],
+           [sg.Input("Patient Id")],
+           [sg.Input("Patient Name")],
+          [sg.Button("GET APPOINTMENT"),sg.Button("SET APPOINTMENTS"),sg.Button("DELETE APPOINTMENT"),sg.Button("Back")]]
+     col2=[[sg.Image("2.png")]]
+
+
+     layout=[[sg.Column(col1),
+              sg.Column(col2)]]
+     window=sg.Window("Appointments",layout).finalize()
+     event,values=window.read()
+     print(event,values[0]) 
+     window.close()
+     return(event,values)
+
+
+def staff():
+    sg.theme("Tan")
+    col1=[[sg.Text("WELCOME",font=("Arial 14"),background_color="white",text_color="black")],
+             [sg.Input("Staff")],
+             [sg.Button("New entry"),sg.Button("Delete"),sg.Button("Back")]]
+
+ 
+    layout=[[sg.Column(col1)]]
+    window=sg.Window("Staff Entry",layout).finalize()
+    event,values=window.read()
+    print(event, values[0]) 
+    window.close()
+    return(event,values)
+
+
+
+
+
+
+
+
+def search():
+    sg.theme("Tan")
+    col1=[[sg.Text("Module Name")],
+          [sg.Combo(["Patient","Staff","Appointment"], size=(20, 20), default_value='-Select-')],
+          [sg.Button("Enter"),sg.Button("Back")]]
+    layout=[[sg.Column(col1)]]
+    window=sg.Window("Search Details",layout).finalize()
+    event,value=window.read()
+    print(event) 
+    window.close()
+    return(event,value)
+def dashboa_d():
+     sg.theme("Tan")
+     col1=[[sg.Input(" WELCOME ACCOUTANT")],
+          [sg.Button("BILL"),sg.Button("TURNOUT"),sg.Button("Birth Reports"),sg.Button("BACK"),sg.Button("Exit")]]
+     col2=[[sg.Image("6.png")]]
+
+
+     layout=[[sg.Column(col1),
+              sg.Column(col2)]]
+     window=sg.Window("WELCOME",layout).finalize()
+     event=window.read()
+     print(event) 
+     window.close()
+     return(event)
+
+def bill():
+    sg.theme("Tan")
+    col1=[[sg.Text("Bill_Id:"),sg.Input("B")],
+           [sg.Text("Patient_Id:"),sg.Input("P")],
+           [sg.Text("Diagonised with"),sg.Input("")],
+           [sg.Text("DATE"),sg.Input(""),sg.CalendarButton("Select date",format=('%y-%m-%d'))],
+           [sg.Text("Year"),sg.Combo([2019,2020,2021,2022], size=(20, 20), default_value='-Select Year-')], 
+           [sg.Text("Medicine Charge"),sg.Input(int())],
+           [sg.Text("Room Charge"),sg.Input(int(2500))],
+           [sg.Text("Operation Charge"),sg.Input(int())],
+           [sg.Text("No.Of.Days"),sg.Input("1")],
+           [sg.Text("Nursing Charge"),sg.Input(int())],
+           [sg.Text("Advance"),sg.Input(int())],
+           [sg.Text("Health Card"),sg.Input(int())],
+           [sg.Text("Lab Charge"),sg.Input(int())],
+           [sg.Button("Bill"),sg.Button("Back")]]
+    layout=[[sg.Column(col1)]]
+    window=sg.Window("Bill",layout).finalize()
+    event,values=window.read()
+    print(event) 
+    window.close()
+    return(event,values)   
+def graph():
+    sg.theme("Tan")
+    col1 = [[sg.Button(enable_events=True,image_filename="g1.png",key='Yearly'),
+             sg.Button(enable_events=True,image_filename="g2.png",key='Monthly'),
+             sg.Button(enable_events=True,image_filename="g3.png",key='Daily')]]
+    layout = [[sg.Column(col1)]]
+    window = sg.Window('Graph',layout).finalize()
+    events,values = window.read()
+    window.close()
+    return (events ,values)
+
+def frspng():
+    sg.theme("Tan")
+    col1 = [[sg.Button(enable_events=True,image_filename="7.png",key='b1'),sg.Button(enable_events=True,image_filename="8.png",key='b2')]]
+    layout = [[sg.Column(col1)]]
+    window = sg.Window('Welcome',layout).finalize()
+    events,values = window.read()
+    window.close()
+    return (events ,values)
+
+def dash():
+     sg.theme("Tan")
+     col1=[[sg.Input("Welcome")],
+           [sg.Button("Persona"),sg.Button("Exit")]]
+     col2=  [[sg.Image("9.png")]]
+     layout=[[sg.Column(col1),
+             sg.Column(col2)]]
+             
+     window=sg.Window("WELCOME",layout)
+     event,values=window.read()
+     print(event)
+     window.close()
+     return(event)
+
+def persona():
+    sg.theme("Tan")
+    layout=[[sg.Text("User Id"),sg.Input()],
+            [sg.Text("Name"),sg.Input()],
+            [sg.Text("Password"),sg.Input()],
+            [sg.Text("Location"),sg.Input()],
+            [sg.Text("Doctor Id"),sg.Input()],
+            [sg.Text("Doctor Name"),sg.Input()],
+            [sg.Text("Medication"),sg.Input()],
+            [sg.Text("Age"),sg.Spin([x+1 for x in range(1,100)], 3, key='spin')],
+            [sg.Text("DATE"),sg.Input("yyyy-mm-dd")],
+            [sg.Text("Phone No"),sg.Input()],
+            [sg.Button("Create"),sg.Button("Search"),sg.Button("Back")]]
+    
+    window=sg.Window("Persona",layout).finalize()
+    event1,values1=window.read()
+    window.close()
+    return(event1,values1)
+def showGUI(persona):
+    sg.theme("Tan")
+    layout=[[sg.Text("User Id")],[sg.Input(str(persona[0]))],
+            [sg.Text("Name")],[sg.Input(str(persona[1]))],
+            [sg.Text("Password")],[sg.Input(str(persona[2]))],
+            [sg.Text("Location")],[sg.Input(str(persona[3]))],
+            [sg.Text("Doctor Id")],[sg.Input(str(persona[4]))],
+            [sg.Text("Doctor Name")],[sg.Input(str(persona[5]))],
+            [sg.Text("Medication")],[sg.Input(str(persona[6]))],
+            [sg.Text("Age")],[sg.Input(str(persona[7]))],
+            [sg.Text("Date of Birth")],[sg.Input(str(persona[8]))],
+            [sg.Text("Phone No")],[sg.Input(str(persona[9]))],
+            [sg.Button("Update")],[sg.Button("Delete")]]
+    window=sg.Window("Patients",layout).finalize()
+    event1,values1=window.read()
+    window.close()
+    return(event1,values1)
+def insertpersona(patientdetails,persona):
+    cols=list(persona.columns)
+    print(cols)
+    lst=[]
+    for i in patientdetails:
+        if i ==" ":
+            lst=lst.append("None")
+        else:
+            lst.append(i)
+    print(lst)
+    srs=pd.Series(lst,index=cols)
+    persona=persona.append(srs,ignore_index=True)
+    print(persona)
+    sg.popup("record Inserted")
+    persona.to_csv("persona.csv",index=False)
+    return(persona)
+def searchstudent(patientdetails,persona):# Display the details of student with given
+    print(patientdetails[0])
+    print(patientdetails[1])
+    print(persona)
+    if len(patientdetails[0])!=0:
+        print("yes")
+        print("Enter")
+        stddf=persona.loc[persona['User Id']==(patientdetails[0])]  
+        print(stddf)
+        if(len(stddf)>0):
+            event,values=showGUI(tuple(stddf.iloc[0]))
+            if event=="delete":
+                index_name=persona[persona['User Id']==(patientdetails[0])].index
+                persona=persona.drop(index_name)
+                sg.popup("patient Details Deleted")
+                persona.to_csv("persona.csv",index=False)
+                
+            elif event=="Update":
+                index_name=persona[persona['User Id']==(patientdetails[0])].index
+                persona.loc[index_name,["User Id","Name","Password","Location","Doctor Id","Doctor Name","Medication","Age","Date of Birth","Phone No"]]=[values[0],values[1],values[2],values[3],values[4],values[5],values[6],values[7],values[8],values[9]]
+                sg.popup("Patient Details Updated")
+                persona.to_csv("persona.csv",index=False)
+                
+            
+        else:
+            sg.popup("No such Record")
+def updatepersona(patientdetails,persona):
+    
+    cols=list(persona.columns)
+    print(cols)
+    lst=[]
+    for i in patientdetails:
+        if i !=" ":
+            lst=lst.append(i)
+        else:
+            lst.append("None")
+    print(lst)
+    srs=pd.Series(lst,index=cols)
+    persona=persona.append(srs,ignore_index=True)
+    print(persona)
+    sg.popup("record updated")
+    persona.to_csv("persona.csv",index=False)
+    return(persona)
+def exit():
+    sg.theme("Tan")
+    layout=[[sg.Text("Are you sure want to exit the app?")],
+            [sg.Button("Yes"),sg.Button("No")]]
+    window=sg.Window("Patients",layout).finalize()
+    event1,values1=window.read()
+    window.close()
+    return(event1,values1)
+#convert to csv
+mydb= mc.connect(user='root',
+                 password='root',
+                 host='127.0.0.1',
+                 database='hms')
+cursor=mydb.cursor()
+cursor.execute('SELECT * FROM bill')
+record=cursor.fetchall()
+df=pd.DataFrame(record)
+print(df)
+df.to_csv('D:\IP\Admin\\bill.csv')
+
