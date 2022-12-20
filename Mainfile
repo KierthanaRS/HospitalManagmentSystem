@@ -1,0 +1,718 @@
+import logingui
+import pandas as pd
+import PySimpleGUI as sg;
+import matplotlib.pyplot as plt
+import mysql.connector as mc
+from datetime import datetime 
+now=datetime.now()
+event=logingui.welcome()
+
+mydb=mc.connect(host="127.0.0.1",
+                database= "hms",
+                user="root",
+                password="root");
+
+
+
+  
+
+#userid=tuple(userInput.values())
+def das__board():
+                  cursor=mydb.cursor()
+                  event,userInput1=logingui.dashboa_d()
+                  if event=='Exit':
+                      event1,UserInput=logingui.exit()
+                      if event1=='Yes':
+                          sg.popup("Thank You")
+                      else:
+                          das__board()
+                  elif event=="BACK":
+                      login_event()
+                  elif event=="Birth Reports":
+                            cursor6=mydb.cursor()
+                            cursor6.execute("SELECT GenderOfChild,count(*) FROM birthreports  GROUP BY GenderOfChild")
+                            record=cursor6.fetchall()
+                            x=[]
+                            y=[]
+                            for i in record:
+                                x.append(i[0])
+                            for k in record:
+                                y.append(k[1])
+                            plt.pie(y,labels=x)
+                            plt.title("Birth Reports")
+                            plt.show()
+                            das__board()
+                  elif event=='BILL':
+                      event,userInput2=logingui.bill()
+                      if event=='Bill':
+                         cursor3=mydb.cursor()
+                         query=("INSERT INTO bill (Bill_Id,Patient_Id,Patient_Type,Date,Year,Medicine_Charge,Room_Charge,Operation_Charge,No_of_days,Nursing_Charge,Advance,Health_Card,Lab_Charge) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)")
+                         cursor3.execute(query,(userInput2[0],userInput2[1],userInput2[2],userInput2[3],userInput2[4],userInput2[5],userInput2[6],userInput2[7],userInput2[8],userInput2[9],userInput2[10],userInput2[11],userInput2[12]))
+                         cursor4=mydb.cursor()
+                         cursor4.execute("UPDATE bill SET Total_bill=(Medicine_Charge+(Room_Charge*No_of_days)+Operation_Charge+Nursing_Charge+Lab_Charge)-(Advance+Health_Card) WHERE Bill_Id=%s AND Patient_Id=%s",(userInput2[0],userInput2[1]))
+                         mydb.commit()
+                         cursor6=mydb.cursor()
+                         cursor6.execute("SELECT Total_bill FROM bill WHERE Bill_Id=%s AND Patient_Id=%s",(userInput2[0],userInput2[1]))
+                         record = cursor6.fetchone()
+                         
+                         if cursor6.rowcount !=0:
+                             layout=[[sg.T(""),sg.T("SEKMED MULTISPECIALITY HOSPITAL",font=('Helbetica',10))],
+                                      [sg.T(""),sg.T("              "),sg.T("BILL",font=('Helbetica',10))],
+                                      [sg.T("")],
+                                      [sg.T("DATE AND TIME:",font=('Helbetica',10)),sg.T(now.strftime("%y-%m-%d %H:%M:%S"))],
+                                      [sg.T("BILL ID:",font=('Helbetica',10)),sg.T(userInput2[0])],
+                                      [sg.T("Patient ID:",font=('Helbetica',10)),sg.T(userInput2[1])],
+                                      [sg.T("Diagnised with:",font=('Helbetica',10)),sg.T(userInput2[2])],
+                                      [sg.T("Date",font=('Helbetica',10)),sg.T(userInput2[3])],
+                                      [sg.T("Medicine Charge",font=('Helbetica',10)),sg.T(userInput2[5])],
+                                      [sg.T("Room Charge",font=('Helbetica',10)),sg.T(userInput2[6])],
+                                      [sg.T("Operation Charge",font=('Helbetica',10)),sg.T(userInput2[7])],
+                                      [sg.T("No of days",font=('Helbetica',10)),sg.T(userInput2[8])],
+                                      [sg.T("Nursing Charge",font=('Helbetica',10)),sg.T(userInput2[9])],
+                                      [sg.T("Advance",font=('Helbetica',10)),sg.T(userInput2[10])],
+                                      [sg.T("Health Card",font=('Helbetica',10)),sg.T(userInput2[11])],
+                                      [sg.T("Lab Charge",font=('Helbetica',10)),sg.T(userInput2[12])],
+                                      [sg.T("Total Amount",font=('Helbetica',10)),sg.T(record)],
+                                      [sg.T("")],
+                                      [sg.Button("PRINT")]]
+                             window = sg.Window('Bill Table', layout, grab_anywhere=False)
+                             event, values = window.read()
+                             window.close()
+                             if event=="PRINT":
+                                 sg.popup("Printer Not Available")
+                                 das__board()
+                    
+                            
+                      elif event=='Back':
+                          das__board()
+                  elif event=='TURNOUT':
+                       cursor6=mydb.cursor()
+                       cursor7=mydb.cursor()
+                       event,usgraph=logingui.graph()
+                       if event=='Yearly':
+                           cursor6.execute("SELECT Year FROM bill GROUP BY Year ORDER BY Year")
+                           record=cursor6.fetchall()
+                           x=[]
+                           for a_tuple in record:
+                                 x.append(a_tuple[0])
+                           cursor7.execute("SELECT SUM(Total_bill) FROM bill GROUP BY Year ORDER BY Year")
+                           rec=cursor7.fetchall()
+                           y=[]
+                           for i in rec:
+                               y.append(i[0])
+                           plt.plot(x,y,linestyle='dashed',linewidth=3,color='m',marker='X',markersize=5,markeredgecolor='k')
+                           plt.title("YEARLY INCOME")
+                           plt.xticks(x)
+                           plt.xlabel("Year")
+                           plt.ylabel("INCOME")
+                           plt.show()
+                           das__board()
+                       elif event=='Monthly':
+                            cursor6.execute("SELECT MONTHNAME(Date),SUM(Total_bill),MONTH(Date) FROM bill WHERE Year=2022 GROUP BY MONTH(Date),MONTHNAME(Date) ORDER BY MONTH(Date) ")
+                            record=cursor6.fetchall()
+                            x=[]
+                            y=[]
+                            for i in record:
+                                x.append(i[0])
+                            for k in record:
+                                y.append(k[1])
+                            plt.plot(x,y,linestyle='dashdot',linewidth=3,color='c',marker='p',markersize=5,markeredgecolor='k')
+                            plt.title("MONTHLY INCOME")
+                            plt.xlabel("Months")
+                            plt.ylabel("INCOME")
+                            plt.show()
+                            das__board()
+                       elif event=='Daily':
+                            cursor6.execute("SELECT DAYNAME(Date),SUM(Total_bill),DAYOFWEEK(Date) FROM bill WHERE Year=2022 GROUP BY DAYOFWEEK(Date),DAYNAME(Date) ORDER BY DAYOFWEEK(Date)")
+                            record=cursor6.fetchall()
+                            x=[]
+                            y=[]
+                            for i in record:
+                                x.append(i[0])
+                            for k in record:
+                                y.append(k[1])
+                            plt.plot(x,y,linestyle='solid',linewidth=3,color='r',marker='4',markersize=5,markeredgecolor='k')
+                            plt.title("Daily INCOME")
+                            plt.xlabel("Weeks Days")
+                            plt.ylabel("INCOME")
+                            plt.show()
+                            das__board()
+
+                       
+
+
+def das_board():
+            event, userInput1 = logingui.dashboard()
+            if event=='BACK':
+                login_event()
+            elif event=='Exit':
+                      event1,userInput=logingui.exit()
+                      if event1=='Yes':
+                          sg.popup("Thank You")
+                      else:
+                          das_board()
+                
+                
+                
+                
+            elif event == 'DOCTOR':
+                event, userInputa = logingui.doctor()
+                if event == 'FINISH':
+                        cursor4=mydb.cursor()
+                        cursor4.execute("SELECT * FROM doctor WHERE Doctor_Id=%s and Department=%s",(userInputa[0], userInputa[1]))
+                        record = cursor4.fetchall()
+                        if cursor4.rowcount !=0:
+                            df=pd.DataFrame(record,columns=list(cursor4.column_names))
+                            heading=list(df.columns)
+                            data=df.values.tolist()
+                            layout = [[sg.Table(values=data,
+                            headings=heading,
+                            max_col_width=25,
+                            auto_size_columns=True,
+                            justification='right',
+                            # alternating_row_color='lightblue',
+                            num_rows=min(len(data), 20))]]
+                            window = sg.Window('Doctor Table', layout, grab_anywhere=False)
+                            event, values = window.read()
+                            window.close()
+                            das_board()
+                        else:
+                            sg.popup("NO DATA FOUND")
+                            das_board()
+                if event == 'Back':
+                    das_board()
+
+            elif event == 'IN PATIENT REGISTRY':
+                cursor5 = mydb.cursor()
+                event, userInputc = logingui.patient()
+                if event == 'Register':
+                    cursor5.execute('INSERT INTO patient VALUES(%s,%s,%s,%s,%s,%s,%s)',(userInputc[0], userInputc[1], userInputc[2],userInputc[3], userInputc[4], userInputc[5],userInputc[6]))
+                    mydb.commit()
+                    sg.popup('Succesfully Added')
+                    das_board()
+                elif event == 'Update':
+                        cursor10 = mydb.cursor()
+                        cursor10.execute("UPDATE patient SET Name=%s,Date_of_Admission=%s,Age=%s,Address=%s,Phone_no=%s,Payment=%s WHERE Patient_Id=%s",(userInputc[1], userInputc[2], userInputc[3], userInputc[4], userInputc[5], userInputc[6],userInputc[0]))
+                        mydb.commit()
+                        sg.popup("Succesfully Changed")
+                        das_board()
+                elif event == 'Delete':
+                    event, userInputh = logingui.delete()
+                    cursor11 = mydb.cursor()
+                    if event == 'Delete':
+                        cursor11.execute("DELETE FROM patient WHERE Patient_Id=%s AND Name=%s",(userInputh[0], userInputh[1]))
+                        mydb.commit()
+                        sg.popup("Succesfully Deleted")
+                        das_board()
+                    elif event == 'Back':
+                        das_board()
+                elif event == 'Back':
+                    das_board()
+            elif event == 'APPOINTMENT':
+                cursor6 = mydb.cursor()
+                event, userInputd = logingui.appointments()
+                if event == 'GET APPOINTMENT':
+                    cursor6.execute("SELECT * FROM appointments WHERE Patient_Id=%s AND Name=%s",(userInputd[0], userInputd[1]))
+                    record = cursor6.fetchall()
+                    if cursor6.rowcount !=0:
+                            df=pd.DataFrame(record,columns=list(cursor6.column_names))
+                            heading=list(df.columns)
+                            data=df.values.tolist()
+                            layout = [[sg.Table(values=data,
+                            headings=heading,
+                            max_col_width=25,
+                            auto_size_columns=True,
+                            justification='right',
+                            # alternating_row_color='lightblue',
+                            num_rows=min(len(data), 20))]]
+                            window = sg.Window('Appointment Table', layout, grab_anywhere=False)
+                            event, values = window.read()
+                            window.close()
+                            das_board()
+                    else:
+                            sg.popup("NO DATA FOUND")
+                            das_board()
+                   
+                elif event == 'SET APPOINTMENTS':
+                    cursor7 = mydb.cursor()
+                    event, userInpute = logingui.app1()
+                    if event == 'ENTER':
+                        cursor7.execute('INSERT INTO appointments VALUES(%s,%s,%s,%s)',(userInpute[0], userInpute[1], userInpute[2],userInpute[3]))
+                        mydb.commit()
+                        sg.popup('Added Succesfull')
+                        das_board()
+                    elif event == 'UPDATE':
+                        cursor12 = mydb.cursor()
+                        cursor12.execute("UPDATE appointments SET Name=%s,Date=%s,Time=%s WHERE Patient_Id=%s",(userInpute[1], userInpute[2], userInpute[3], userInpute[0]))
+                        mydb.commit()
+                        sg.popup("UPDATED")
+                        das_board()
+                    elif event=='Back':
+                        das_board()
+                elif event=='Back':
+                        das_board()
+                elif event=="DELETE APPOINTMENTS":
+                        cursor14=mydb.commit()
+                        event,userInputi=logingui.delete()
+                        if event=='Delete':
+                             cursor14.execute("DELETE FROM appointments WHERE Patient_Id=%s AND Name=%s",(userInputi[0], userInputi[1]))
+                             mydb.commit()
+                             sg.popup("DELETED")
+                        elif event == 'Back':
+                             das_board()
+            elif event == 'STAFF':
+                cursor8 = mydb.cursor()
+                event, userInputf = logingui.staff()
+                if event == 'New entry':
+                    cursor9 = mydb.cursor()
+                    event, userInputg = logingui.nstaff()
+                    print(event)
+                    if event == 'Register':
+                        cursor9.execute('INSERT INTO staff VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s)',(userInputg[0], userInputg[1], userInputg[2],userInputg[3], userInputg[4], userInputg[5],userInputg[6], userInputg[7], userInputg[8]))
+                        mydb.commit()
+                        sg.popup('Added Succesfull')
+                        das_board()
+                    elif event=='Back':
+                        das_board()
+                    elif event=='Update':
+                        cursor15 = mydb.cursor()
+                        cursor15.execute("UPDATE staff SET Name=%s,Address=%s,Date_of_Birth=%s,Email_Id=%s,Phone_no=%s,Date_Of_Join=%s,Salary=%s,Department=%s WHERE Staff_Id=%s",(userInputg[1], userInputg[2], userInputg[3],userInputg[4],userInputg[5],userInputg[6],userInputg[7],userInputg[8],userInputg[0]))
+                        mydb.commit()
+                        sg.popup("UPDATED")
+                        das_board()
+                elif event=='Delete':
+                        cursor16=mydb.commit()
+                        event,userInputi=logingui.delete()
+                        if event=='Delete':
+                            cursor16.execute("DELETE FROM staff WHERE Staff_Id=%s AND Name=%s",(userInputi[0], userInputi[1]))
+                            mydb.commit()
+                            sg.popup("DELETED")
+                        elif event == 'Back':
+                            das_board()
+                elif event=='Back':
+                    das_board()
+            elif event=='SEARCH':
+                event,userInputz=logingui.search()
+                ut=userInputz[0]
+                if event=='Back':
+                    das_board()
+                elif event=='Enter':
+                    if ut.upper()=='PATIENT':
+                        cursor17=mydb.cursor()
+                        cursor17.execute("SELECT * FROM Patient")
+                        record = cursor17.fetchall()
+                        if cursor17.rowcount !=0:
+                            df=pd.DataFrame(record,columns=list(cursor17.column_names))
+                            heading=list(df.columns)
+                            data=df.values.tolist()
+                            layout = [[sg.Table(values=data,
+                            headings=heading,
+                            max_col_width=25,
+                            auto_size_columns=True,
+                            justification='right',
+                            alternating_row_color='lightblue',
+                            num_rows=min(len(data), 20))]]
+                            window = sg.Window('Patient Table', layout, grab_anywhere=False)
+                            event, values = window.read()
+                            window.close()
+                            das_board()
+                        else:
+                            sg.popup("NO DATA FOUND")
+                            das_board()
+                    elif ut.upper()=='STAFF':
+                        cursor18=mydb.cursor()
+                        cursor18.execute("SELECT * FROM staff")
+                        record = cursor18.fetchall()
+                        if cursor18.rowcount !=0:
+                            df=pd.DataFrame(record,columns=list(cursor18.column_names))
+                            heading=list(df.columns)
+                            data=df.values.tolist()
+                            layout = [[sg.Table(values=data,
+                            headings=heading,
+                            max_col_width=25,
+                            auto_size_columns=True,
+                            justification='right',
+                            # alternating_row_color='lightblue',
+                            num_rows=min(len(data), 20))]]
+                            window = sg.Window('Staff Table', layout, grab_anywhere=False)
+                            event, values = window.read()
+                            window.close()
+                            das_board()
+                        else:
+                            sg.popup("NO DATA FOUND")
+                            das_board()
+                    elif ut.upper()=='APPOINTMENT':
+                        cursor19=mydb.cursor()
+                        cursor19.execute("SELECT * FROM appointments")
+                        record = cursor19.fetchall()
+                        if cursor19.rowcount !=0:
+                            df=pd.DataFrame(record,columns=list(cursor19.column_names))
+                            heading=list(df.columns)
+                            data=df.values.tolist()
+                            layout = [[sg.Table(values=data,
+                            headings=heading,
+                            max_col_width=25,
+                            auto_size_columns=True,
+                            justification='right',
+                            # alternating_row_color='lightblue',
+                            num_rows=min(len(data), 20))]]
+                            window = sg.Window('Appointment Table', layout, grab_anywhere=False)
+                            event, values = window.read()
+                            window.close()
+                            das_board()
+                        else:
+                            sg.popup("NO DATA FOUND")
+                            das_board()
+def login_event():
+            
+  
+            event,userInput=logingui.login()
+            if event == 'Log In':
+                cursor.execute("SELECT User_name FROM login WHERE Id =%s and PASSWORD=%s",(userInput[0], userInput[1]))
+                record = cursor.fetchall()
+                if cursor.rowcount == 1:
+                    for i in record:
+                           str=','.join(i)
+                    if userInput[2]=='Admin':
+                                   sg.popup('WELCOME '+str)
+                                   das_board()
+                    elif userInput[2]=='Accoutant':
+                                   sg.popup('WELCOME '+str)
+                                   das__board()
+                    elif userInput[2]=="-Select-":
+                                  sg.popup("No User Type mentioned")
+                                  login_event()
+                        
+                    event, userInput1 = logingui.dashboard()
+                    if event=='Exit':
+                      event1,userInput=logingui.exit()
+                    
+                      if event1=='Yes':
+                          sg.popup("Thank You")
+                      else:
+                          das_board()
+                         
+                    elif event=='BACK':
+                            login_event()
+                    elif event == 'DOCTOR':
+                        event, userInputa = logingui.doctor()
+                        if event == 'FINISH':
+                                cursor4=mydb.cursor()
+                                cursor4.execute("SELECT * FROM doctor WHERE Doctor_Id=%s and Department=%s",(userInputa[0], userInputa[1]))
+                                record = cursor4.fetchall()
+                                if cursor4.rowcount !=0:
+                                    df=pd.DataFrame(record,columns=list(cursor4.column_names))
+                                    heading=list(df.columns)
+                                    data=df.values.tolist()
+                                    layout = [[sg.Table(values=data,
+                                    headings=heading,
+                                    max_col_width=25,
+                                    auto_size_columns=True,
+                                    justification='right',
+                                    # alternating_row_color='lightblue',
+                                    num_rows=min(len(data), 20))]]
+                                    window = sg.Window('Doctor Table', layout, grab_anywhere=False)
+                                    event, values = window.read()
+                                    window.close()
+                                    das_board()
+                        if event == 'Back':
+                            das_board()
+
+                    elif event == 'IN PATIENT REGISTRY':
+                        cursor5 = mydb.cursor()
+                        event, userInputc = logingui.patient()
+                        if event == 'Register':
+                            cursor5.execute('INSERT INTO patient VALUES(%s,%s,%s,%s,%s,%s,%s)',(userInputc[0], userInputc[1], userInputc[2],userInputc[3], userInputc[4], userInputc[5],userInputc[6]))
+                            mydb.commit()
+                            sg.popup('Succesfully Added')
+                            das_board()
+                        elif event == 'Update':
+                                cursor10 = mydb.cursor()
+                                cursor10.execute("UPDATE patient SET Name=%s,Date_of_Admission=%s,Age=%s,Address=%s,Phone_no=%s,Advance=%s WHERE Patient_Id=%s",(userInputc[1], userInputc[2], userInputc[3], userInputc[4], userInputc[5], userInputc[6],userInputc[0]))
+                                mydb.commit()
+                                sg.popup("Succesfully Changed")
+                                das_board()
+                        elif event == 'Delete':
+                            event, userInputh = logingui.delete()
+                            cursor11 = mydb.cursor()
+                            if event == 'Delete':
+                                cursor11.execute("DELETE FROM patient WHERE Patient_Id=%s AND Name=%s",(userInputh[0], userInputh[1]))
+                                mydb.commit()
+                                sg.popup("Succesfully Deleted")
+                                das_board()
+                            elif event == 'Back':
+                                das_board()
+                        elif event == 'Back':
+                            das_board()
+                    elif event == 'APPOINTMENT':
+                        cursor6 = mydb.cursor()
+                        event, userInputd = logingui.appointments()
+                        if event == 'GET APPOINTMENT':
+                            cursor6.execute("SELECT * FROM appointments WHERE Patient_Id=%s AND Name=%s",(userInputd[0], userInputd[1]))
+                            record = cursor6.fetchall()
+                            if cursor6.rowcount == 1:
+                                sg.popup(record)
+                                das_board()
+                            else:
+                                sg.popup("NO DATA FOUND")
+                                das_board()
+                        elif event == 'SET APPOINTMENTS':
+                            cursor7 = mydb.cursor()
+                            event, userInpute = logingui.app1()
+                            if event == 'ENTER':
+                                cursor7.execute('INSERT INTO appointments VALUES(%s,%s,%s,%s)',(userInpute[0], userInpute[1], userInpute[2],userInpute[3]))
+                                mydb.commit()
+                                sg.popup('Added Succesfull')
+                                das_board()
+                            elif event == 'UPDATE':
+                                cursor12 = mydb.cursor()
+                                cursor12.execute("UPDATE appointments SET Name=%s,Date=%s,Time=%s WHERE Patient_Id=%s",(userInpute[1], userInpute[2], userInpute[3], userInpute[0]))
+                                mydb.commit()
+                                sg.popup("UPDATED")
+                                das_board()
+                            elif event=='Back':
+                                das_board()
+                        elif event=='Back':
+                                das_board()
+                        elif event=="DELETE APPOINTMENTS":
+                                cursor14=mydb.commit()
+                                event,userInputi=logingui.delete()
+                                if event=='Delete':
+                                     cursor14.execute("DELETE FROM appointments WHERE Patient_Id=%s AND Name=%s",(userInputi[0], userInputi[1]))
+                                     mydb.commit()
+                                     sg.popup("DELETED")
+                                     das_board
+                                elif event == 'Back':
+                                     das_board()
+                    elif event == 'STAFF':
+                        cursor8 = mydb.cursor()
+                        event, userInputf = logingui.staff()
+                        if event == 'New entry':
+                            cursor9 = mydb.cursor()
+                            event, userInputg = logingui.nstaff()
+                            print(event)
+                            if event == 'Register':
+                                cursor9.execute('INSERT INTO staff VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s)',(userInputg[0], userInputg[1], userInputg[2],userInputg[3], userInputg[4], userInputg[5],userInputg[6], userInputg[7], userInputg[8]))
+                                mydb.commit()
+                                sg.popup('Added Succesfull')
+                                das_board()
+                            elif event=='Back':
+                                das_board()
+                            elif event=='Update':
+                                cursor15 = mydb.cursor()
+                                cursor15.execute("UPDATE staff SET Name=%s,Address=%s,Date_of_Birth=%s,Email_Id=%s,Phone_no=%s,Date_Of_Join=%s,Salary=%s,Department=%s WHERE Staff_Id=%s",(userInputg[1], userInputg[2], userInputg[3],userInputg[4],userInputg[5],userInputg[6],userInputg[7],userInputg[8],userInputg[0]))
+                                mydb.commit()
+                                sg.popup("UPDATED")
+                                das_board()
+                        elif event=='Delete':
+                                cursor16=mydb.commit()
+                                event,userInputi=logingui.delete()
+                                if event=='Delete':
+                                    cursor16.execute("DELETE FROM staff WHERE Staff_Id=%s AND Name=%s",(userInputi[0], userInputi[1]))
+                                    mydb.commit()
+                                    sg.popup("DELETED")
+                                    das_board()
+                                elif event == 'Back':
+                                    das_board()
+                        elif event=='Back':
+                            das_board()
+                    elif event=='SEARCH':
+                        event,userInputz=logingui.search()
+                        ut=userInputz[0]
+                        print(ut.upper())
+                        if event=='Back':
+                            das_board()
+                        elif event=='Enter':
+                            if ut.upper()=='PATIENT':
+                                cursor17=mydb.cursor()
+                                cursor17.execute("SELECT * FROM Patient")
+                                record = cursor17.fetchall()
+                                if cursor17.rowcount !=0:
+                                    df=pd.DataFrame(record,columns=list(cursor17.column_names))
+                                    heading=list(df.columns)
+                                    data=df.values.tolist()
+                                    layout = [[sg.Table(values=data,
+                                    headings=heading,
+                                    max_col_width=25,
+                                    auto_size_columns=True,
+                                    justification='right',
+                                    # alternating_row_color='lightblue',
+                                    num_rows=min(len(data), 20))]]
+                                    window = sg.Window('Table', layout, grab_anywhere=False)
+                                    event, values = window.read()
+                                    window.close()
+                                    das_board()
+                                else:
+                                    sg.popup("NO DATA FOUND")
+                                    das_board()
+                            elif ut.upper()=='STAFF':
+                                cursor18=mydb.cursor()
+                                cursor18.execute("SELECT * FROM staff")
+                                record = cursor18.fetchall()
+                                if cursor18.rowcount !=0:
+                                    df=pd.DataFrame(record,columns=list(cursor18.column_names))
+                                    heading=list(df.columns)
+                                    data=df.values.tolist()
+                                    layout = [[sg.Table(values=data,
+                                    headings=heading,
+                                    max_col_width=25,
+                                    auto_size_columns=True,
+                                    justification='right',
+                                    # alternating_row_color='lightblue',
+                                    num_rows=min(len(data), 20))]]
+                                    window = sg.Window('Staff Table', layout, grab_anywhere=False)
+                                    event, values = window.read()
+                                    window.close()
+                                    das_board()
+                                else:
+                                    sg.popup("NO DATA FOUND")
+                                    das_board()
+                            elif ut.upper()=='APPOINTMENT':
+                                cursor19=mydb.cursor()
+                                cursor19.execute("SELECT * FROM appointments")
+                                record = cursor19.fetchall()
+                                if cursor19.rowcount !=0:
+                                    df=pd.DataFrame(record,columns=list(cursor19.column_names))
+                                    heading=list(df.columns)
+                                    data=df.values.tolist()
+                                    layout = [[sg.Table(values=data,
+                                    headings=heading,
+                                    max_col_width=25,
+                                    auto_size_columns=True,
+                                    justification='right',
+                                    # alternating_row_color='lightblue',
+                                    num_rows=min(len(data), 20))]]
+                                    window = sg.Window('Appointment Table', layout, grab_anywhere=False)
+                                    event, values = window.read()
+                                    window.close()
+                                    das_board()
+                                else:
+                                    sg.popup("NO DATA FOUND")
+                                    das_board()
+
+            elif event=="Sign Up":
+                cursor.execute("SELECT * FROM login WHERE Id =%s and PASSWORD=%s",(userInput[0], userInput[1]))
+                record = cursor.fetchall()
+                if cursor.rowcount == 1:
+                    sg.popup("ALREADY EXSISTING ID")
+                    login_event()
+                else:
+                       event,userInputs=logingui.signup()
+                       if event=='Sign Up':
+                           cursor1=mydb.cursor()
+                           
+                           print(userInputs[0],userInputs[1],userInputs[2],userInputs[3])
+                           cursor1.execute('INSERT INTO login VALUES(%s,%s,%s,%s)',(userInputs[0],userInputs[1],userInputs[2],userInputs[3]))
+                           mydb.commit()
+                           sg.popup('Succesfully Added')
+                           login_event()
+                       elif event=='Cancel':
+                           login_event()
+            elif event=='Forgot Password':
+                   cursor2=mydb.cursor()
+                   event,userInputk=logingui.fgtpwd()
+                   print(userInputk[0],userInputk[1])
+                   userid=tuple(userInputk.values())
+                   cursor2.execute('SELECT * FROM login WHERE User_name=%s and Identification=%s',(userInputk[0],userInputk[1]))
+                   record=cursor2.fetchall()
+                   if cursor2.rowcount==1:
+                        cursor3=mydb.cursor()
+                        cursor3.execute("SELECT PASSWORD FROM login  WHERE User_name=%s and Identification=%s",(userInputk[0],userInputk[1]))
+                        record=cursor3.fetchall()
+                        for i in record:
+                           str=','.join(i)
+                           sg.popup('Password:'+ str)
+                        login_event()
+                   else:
+                       sg.popup('Invalid User name or Identification number')
+                       login_event()
+
+        
+event,userInput20=logingui.frspng()
+if event=="b1":
+       
+        cursor=mydb.cursor()
+        event,userInput=logingui.login()
+        if event == 'Log In':
+                    cursor.execute("SELECT User_name FROM login WHERE Id =%s and PASSWORD=%s",(userInput[0], userInput[1]))
+                    record = cursor.fetchall()
+                    if cursor.rowcount == 1:
+                          for i in record:
+                               str=','.join(i)
+                               if userInput[2]=='Admin':
+                                   sg.popup('WELCOME '+str)
+                                   das_board()
+                               elif userInput[2]=='Accoutant':
+                                   sg.popup('WELCOME '+str)
+                                   das__board()
+                               elif userInput[2]=="-Select-":
+                                  sg.popup("No User Type mentioned")
+                                  login_event()
+                                   
+                    if cursor.rowcount!=1:
+                          sg.popup("invalid credentials")
+                          login_event()
+
+        elif event=="Sign Up":
+                cursor.execute("SELECT * FROM login WHERE Id =%s and PASSWORD=%s",(userInput[0], userInput[1]))
+                record = cursor.fetchall()
+                if cursor.rowcount == 1:
+                    sg.popup("ALREADY EXSISTING ID")
+                    login_event()
+                else:
+                       event,userInputs=logingui.signup()
+                       if event=='Sign Up':
+                           cursor1=mydb.cursor()
+                           
+                           print(userInputs[0],userInputs[1],userInputs[2],userInputs[3])
+                           cursor1.execute('INSERT INTO login VALUES(%s,%s,%s,%s)',(userInputs[0],userInputs[1],userInputs[2],userInputs[3]))
+                           mydb.commit()
+                           sg.popup('Succesfully Added')
+                           login_event()
+                       elif event=='Cancel':
+                           login_event()
+        elif event=="Forgot Password":
+                   cursor2=mydb.cursor()
+                   event,userInputk=logingui.fgtpwd()
+                   print(userInputk[0],userInputk[1])
+                   userid=tuple(userInputk.values())
+                   cursor2.execute('SELECT * FROM login WHERE User_name=%s and Identification=%s',(userInputk[0],userInputk[1]))
+                   record=cursor2.fetchall()
+                   if cursor2.rowcount==1:
+                        cursor3=mydb.cursor()
+                        cursor3.execute("SELECT PASSWORD FROM login  WHERE User_name=%s and Identification=%s",(userInputk[0],userInputk[1]))
+                        record=cursor3.fetchall()
+                        for i in record:
+                           str=','.join(i)
+                           sg.popup('Password:'+ str)
+                        login_event()
+                   else:
+                       sg.popup('Invalid User name or Identification number')
+                       login_event() 
+
+elif event=="b2":
+    def patientoption():
+            persona=pd.read_csv("persona.csv")
+            keys=logingui.dash()
+            if keys=='Exit':
+                      event1,userInput=logingui.exit()
+                      if event1=='Yes':
+                          sg.popup("Thank You")
+                      else:
+                          patientoption()
+            elif keys=="Persona":
+                event1,userInput=logingui.persona()
+                patientdetails=tuple(userInput.values())
+                if event1=="Create":
+                    newdata=logingui.insertpersona(patientdetails,persona)
+                    print(newdata)
+                    patientoption()
+                elif event1=="Search":
+                    searchdata=logingui.searchstudent(patientdetails,persona)
+                    patientoption()
+                elif event1=="Back":
+                    patientoption()
+                else:
+                    event1,userInput=logingui.persona()
+    patientoption()
+
